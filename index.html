@@ -7,11 +7,12 @@
   <style>
     :root{
       --bg:#0b0c10;--card:#15171e;--muted:#8b90a2;--text:#e9ecf4;--accent:#0052ff;--accent-2:#5aa0ff;
-      --radius:20px;--shadow:0 8px 28px rgba(0,0,0,.35);
+      --ok:#37d67a;--warn:#ffce3a;--bad:#ff6b6b;--radius:20px;--shadow:0 8px 28px rgba(0,0,0,.35);
     }
     *{box-sizing:border-box}
     html,body{height:100%}
-    body{margin:0;font:16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;color:var(--text);background:var(--bg)}
+    body{margin:0;font:16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;color:var(--text);
+      background:var(--bg)}
     .wrap{max-width:1440px;margin:40px auto;padding:0 28px 72px}
 
     header{display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;flex-wrap:wrap;}
@@ -30,20 +31,23 @@
     input[type="number"]:focus, input[type="text"]:focus{border-color:var(--accent)}
     .row{display:flex;gap:12px;flex-wrap:wrap}
 
+    /* Chips (uniform badges/pills) */
     .chips{display:grid;grid-template-columns:repeat(4, max-content);gap:8px;align-items:center}
-    .chip{display:inline-flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;color:#d6dbeb;min-width:fit-content}
+    .chip{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;border-radius:999px;background:rgba(255,255,255,.06);font-size:13px;color:#d6dbeb}
     .chip strong{color:#fff}
     .chip span{color:#cfd5e9}
-    .chip.accent{background:linear-gradient(180deg,var(--accent),#0042cc);color:#fff;box-shadow:none}
+    .chip.accent{background:linear-gradient(180deg,var(--accent),#0042cc);color:#fff;box-shadow:0 6px 18px rgba(0,82,255,.28)}
 
+    /* Outputs & tooltips */
     .out{display:flex;flex-direction:column;gap:10px;margin-top:8px}
     .out .line{display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:8px 0}
+    .out .k{color:#c9cee3;position:relative;cursor:help}
     .out .k{color:#c9cee3;position:relative;display:inline-flex;align-items:center;gap:6px}
-    .out .info-btn{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);border-radius:50%;background:transparent;color:#cfd5e9;font-size:11px;line-height:1;cursor:pointer;box-shadow:none}
+    .out .k[data-tip]:hover::after{content:attr(data-tip);position:absolute;left:0;top:100%;margin-top:8px;background:#0f131d;color:#fff;border:1px solid rgba(255,255,255,.12);padding:10px 12px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35);max-width:320px;white-space:normal;z-index:5}
+    .out .k[data-tip]:hover::before{content:"";position:absolute;left:12px;top:100%;margin-top:2px;border:6px solid transparent;border-bottom-color:#0f131d}
+    .out .info-btn{width:18px;height:18px;display:inline-flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.25);border-radius:999px;background:transparent;color:#cfd5e9;font-size:11px;line-height:1;cursor:pointer}
     .out .info-btn:focus{outline:none;border-color:var(--accent)}
     .out .v{font-variant-numeric:tabular-nums}
-
-    #tip{position:absolute;display:none;background:#0f131d;color:#fff;border:1px solid rgba(255,255,255,.12);padding:10px 12px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35);max-width:320px;z-index:50}
 
     .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
     button{border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 8px 18px rgba(0,82,255,.35)}
@@ -60,13 +64,15 @@
       .badge{position:static;transform:none}
       .chips{grid-template-columns:repeat(2, minmax(0, max-content))}
     }
+    /* Floating tooltip for mobile/click */
+    #tip{position:absolute;display:none;background:#0f131d;color:#fff;border:1px solid rgba(255,255,255,.12);padding:10px 12px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35);max-width:320px;z-index:50}
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
       <div class="left-logo">
-        <svg viewBox="0 0 909.52 909.52" width="36" height="36" style="fill:#fff;display:block">
+        <svg class="brand-logo" viewBox="0 0 909.52 909.52" width="36" height="36" aria-label="logo" style="fill:#fff;display:block">
           <polygon points="0 0 0 184.85 178.98 363.82 178.98 181.91 909.52 181.91 909.52 0 0 0"/>
           <polygon points="178.97 366.77 357.99 545.71 178.97 545.71 178.97 727.62 .03 548.67 .03 363.81 178.97 363.81 178.97 366.77"/>
           <rect x="357.99" y="363.81" width="551.5" height="181.9"/>
@@ -110,47 +116,137 @@
         <div class="field"><label>Expected ROAS</label><input id="roas" type="number" step="0.1" min="0" value="6.00"></div>
         <div class="field"><label>Monthly Team & Staff Costs</label><input id="teamFee" type="number" step="50" min="0" value="2000"></div>
         <div class="out">
-          <div class="line"><div class="k" data-tip="Faturamento gerado pelos anúncios: Ad Spend × ROAS.">Revenue From Ad Spend (ROAS)<button class="info-btn">i</button></div><div class="v" id="revenue">$0/month</div></div>
-          <div class="line"><div class="k" data-tip="Lucro bruto sobre a receita (aplica sua margem média).">Profit After Margin<button class="info-btn">i</button></div><div class="v" id="pam">$0/month</div></div>
-          <div class="line"><div class="k" data-tip="Lucro bruto menos o investimento em anúncios.">Profit After Ad Spend<button class="info-btn">i</button></div><div class="v" id="paAd">$0/month</div></div>
-          <div class="line"><div class="k" data-tip="Lucro após anúncios e custos fixos de time/equipe.">Net Profit<button class="info-btn">i</button></div><div class="v" id="trueProfit">$0/month</div></div>
-          <div class="line"><div class="k" data-tip="Percentual que sobra do faturamento após anúncios e custos: Net Profit ÷ Revenue.">Profit Margin After Ads<button class="info-btn">i</button></div><div class="v" id="profitMarginAfterAds">0%</div></div>
+          <div class="line"><div class="k" data-tip="Faturamento gerado pelos anúncios: Ad Spend × ROAS.">Revenue From Ad Spend (ROAS)<button class="info-btn" aria-label="Help" title="What is this?">i</button></div><div class="v" id="revenue">$0/month</div></div>
+          <div class="line"><div class="k" data-tip="Lucro bruto sobre a receita (aplica sua margem média).">Profit After Margin<button class="info-btn" aria-label="Help" title="What is this?">i</button></div><div class="v" id="pam">$0/month</div></div>
+          <div class="line"><div class="k" data-tip="Lucro bruto menos o investimento em anúncios.">Profit After Ad Spend<button class="info-btn" aria-label="Help" title="What is this?">i</button></div><div class="v" id="paAd">$0/month</div></div>
+          <div class="line"><div class="k" data-tip="Lucro após anúncios e custos fixos de time/equipe.">Net Profit<button class="info-btn" aria-label="Help" title="What is this?">i</button></div><div class="v" id="trueProfit">$0/month</div></div>
+          <div class="line"><div class="k" data-tip="Percentual que sobra do faturamento após anúncios e custos: Net Profit ÷ Revenue.">Profit Margin After Ads<button class="info-btn" aria-label="Help" title="What is this?">i</button></div><div class="v" id="profitMarginAfterAds">0%</div></div>
         </div>
         <div class="actions"><button class="ghost" id="shareBtn">Copiar link com estes valores</button></div>
       </article>
     </section>
   </div>
 
-  <div id="tip"></div>
-
   <script>
   (function(){
     const $ = sel => document.querySelector(sel);
-    const money0 = v => {if(v>=1000) return `$${(v/1000).toFixed(1)}k`;return v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });};
-    const clamp=(v,min,max)=>Math.min(max,Math.max(min,v));const toNum=el=>parseFloat(el?.value||0)||0;
+    const money0 = v => {
+      if(v>=1000) return `$${(v/1000).toFixed(1)}k`;
+      return v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
+    };
+    const clamp = (v,min,max)=>Math.min(max,Math.max(min,v));
+    const toNum = el => parseFloat(el?.value || 0) || 0;
+
     const apm=$('#apm'),adSpend=$('#adSpend'),roas=$('#roas'),teamFee=$('#teamFee'),
     breakeven=$('#breakeven'),revenue=$('#revenue'),pam=$('#pam'),paAd=$('#paAd'),trueProfit=$('#trueProfit'),roiBadge=$('#roiBadge'),
-    price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),beCPA=$('#beCPA'),targetCPA2x=$('#targetCPA2x'),targetCPA2_5x=$('#targetCPA2_5x'),profitMarginAfterAds=$('#profitMarginAfterAds'),shareBtn=$('#shareBtn');
+    price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),
+    beCPA=$('#beCPA'),targetCPA2x=$('#targetCPA2x'),targetCPA2_5x=$('#targetCPA2_5x'),
+    profitMarginAfterAds=$('#profitMarginAfterAds'),shareBtn=$('#shareBtn');
 
-    function calcPM(){const p=toNum(price),c=toNum(cost);const margin=p>0?clamp((p-c)/p,0,1):0;pmOut.textContent=(Math.round(margin*1000)/1000).toFixed(3);const mk=p>0?(p-c)/c:0;const mkPct=Math.round(mk*100);const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);markup.textContent=`${mkPct}% or ${mkXStr}x`;const beCPAVal=Math.max(0,p-c);const target2x=beCPAVal/2;const target2_5x=beCPAVal/2.5;beCPA.textContent=money0(beCPAVal);targetCPA2x.textContent=money0(target2x);targetCPA2_5x.textContent=money0(target2_5x);return margin;}
+    function calcPM(){
+      const p=toNum(price),c=toNum(cost);
+      const margin=p>0?clamp((p-c)/p,0,1):0;
+      pmOut.textContent=(Math.round(margin*1000)/1000).toFixed(3);
+      const mk=p>0?(p-c)/c:0;
+      const mkPct=Math.round(mk*100);
+      const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);
+      markup.textContent=`${mkPct}% or ${mkXStr}x`;
 
-    function calcBottom(){const margin=toNum(apm),spend=toNum(adSpend),r=toNum(roas),team=toNum(teamFee);const breq=margin>0?(1/margin):0;const rev=spend*r;const pAfterMargin=rev*margin;const pAfterAd=pAfterMargin-spend;const trueP=pAfterAd-team;breakeven.textContent=breq.toFixed(2);revenue.textContent=money0(rev)+'/month';pam.textContent=money0(pAfterMargin)+'/month';paAd.textContent=money0(pAfterAd)+'/month';trueProfit.textContent=money0(trueP)+'/month';const roiPct=spend>0?(trueP/spend)*100:0;const profitMarginAdPct=rev>0?(trueP/rev)*100:0;roiBadge.textContent=`ROI: ${Math.round(roiPct)}%`;profitMarginAfterAds.textContent=`${profitMarginAdPct.toFixed(1)}%`;return{trueP,roiPct};}
+      const beCPAVal=Math.max(0,p-c);
+      const target2x=beCPAVal/2;
+      const target2_5x=beCPAVal/2.5;
+      beCPA.textContent=money0(beCPAVal);
+      targetCPA2x.textContent=money0(target2x);
+      targetCPA2_5x.textContent=money0(target2_5x);
+      return margin;
+    }
 
-    function syncMargin(){const m=calcPM();apm.value=(Math.round(m*1000)/1000).toFixed(3);calcBottom();saveToQuery();}
+    function calcBottom(){
+      const margin=toNum(apm),spend=toNum(adSpend),r=toNum(roas),team=toNum(teamFee);
+      const breq=margin>0?(1/margin):0;
+      const rev=spend*r;
+      const pAfterMargin=rev*margin;
+      const pAfterAd=pAfterMargin-spend;
+      const trueP=pAfterAd-team;
 
-    [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});[apm,adSpend,roas,teamFee].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+      breakeven.textContent=breq.toFixed(2);
+      revenue.textContent=money0(rev)+'/month';
+      pam.textContent=money0(pAfterMargin)+'/month';
+      paAd.textContent=money0(pAfterAd)+'/month';
+      trueProfit.textContent=money0(trueP)+'/month';
 
-    function saveToQuery(){const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,spend:adSpend.value,roas:roas.value,team:teamFee.value});const url=`${location.pathname}?${params.toString()}`;history.replaceState(null,'',url);}
+      const roiPct=spend>0?(trueP/spend)*100:0;
+      const profitMarginAdPct=rev>0?(trueP/rev)*100:0;
 
-    function loadFromQuery(){const q=new URLSearchParams(location.search);const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};set(price,'price');set(cost,'cost');set(apm,'apm');set(adSpend,'spend');set(roas,'roas');set(teamFee,'team');}
+      roiBadge.textContent=`ROI: ${Math.round(roiPct)}%`;
+      profitMarginAfterAds.textContent=`${profitMarginAdPct.toFixed(1)}%`;
 
-    shareBtn.addEventListener('click',async()=>{saveToQuery();const shareUrl=location.href;try{await navigator.clipboard.writeText(shareUrl);shareBtn.textContent='Link copiado!';setTimeout(()=>shareBtn.textContent='Copiar link com estes valores',1500);}catch(e){alert(shareUrl);}});
+      return{trueP,roiPct};
+    }
 
-    loadFromQuery();syncMargin();
+    function syncMargin(){
+      const m=calcPM();
+      apm.value=(Math.round(m*1000)/1000).toFixed(3);
+      calcBottom();
+      saveToQuery();
+    }
 
-    const tipEl=document.getElementById('tip');
-    function showTip(target){const msg=target.getAttribute('data-tip');if(!msg)return;tipEl.textContent=msg;const r=target.getBoundingClientRect();const top=window.scrollY+r.bottom+8;const left=window.scrollX+r.left;tipEl.style.top=top+'px';tipEl.style.left=left+'px';tipEl.style.display='block';}
-    function hideTip(){tipEl.style.display='none';}
-    document.querySelectorAll('.out .k').forEach(k=>{const btn=k.querySelector('.info-btn');const handler=(e)=>{e.stopPropagation();if(tipEl.style.display==='block'){hideTip();}else{showTip(k);}};k.addEventListener('click',handler);if(btn)btn.addEventListener('click',handler);});
-    document.addEventListener('click',hideTip);window.addEventListener('scroll',hideTip,{passive:true});
+    [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});
+    [apm,adSpend,roas,teamFee].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+
+    function saveToQuery(){
+      const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,spend:adSpend.value,roas:roas.value,team:teamFee.value});
+      const url=`${location.pathname}?${params.toString()}`;
+      history.replaceState(null,'',url);
+    }
+
+    function loadFromQuery(){
+      const q=new URLSearchParams(location.search);
+      const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};
+      set(price,'price');set(cost,'cost');set(apm,'apm');set(adSpend,'spend');set(roas,'roas');set(teamFee,'team');
+    }
+
+    shareBtn.addEventListener('click',async()=>{
+      saveToQuery();
+      const shareUrl=location.href;
+      try{
+        await navigator.clipboard.writeText(shareUrl);
+        shareBtn.textContent='Link copiado!';
+        setTimeout(()=>shareBtn.textContent='Copiar link com estes valores',1500);
+      }catch(e){alert(shareUrl);}
+    });
+
+    loadFromQuery();
+    syncMargin();
+
+    // Mobile/click tooltips: reuse one floating element
+    const tipEl=document.createElement('div');
+    tipEl.id='tip';
+    document.body.appendChild(tipEl);
+
+    function showTip(target){
+      const msg = target.getAttribute('data-tip');
+      if(!msg) return;
+      tipEl.textContent = msg;
+      const r = target.getBoundingClientRect();
+      const top = window.scrollY + r.bottom + 8;
+      const left = window.scrollX + r.left;
+      tipEl.style.top = top + 'px';
+      tipEl.style.left = left + 'px';
+      tipEl.style.display = 'block';
+    }
+    function hideTip(){ tipEl.style.display='none'; }
+
+    // Click/tap on label or its (i) button
+    document.querySelectorAll('.out .k').forEach(k =>{
+      const btn = k.querySelector('.info-btn');
+      const handler=(e)=>{ e.stopPropagation(); if(tipEl.style.display==='block'){hideTip();} else { showTip(k); } };
+      k.addEventListener('click', handler);
+      if(btn) btn.addEventListener('click', handler);
+    });
+    document.addEventListener('click', hideTip);
+    window.addEventListener('scroll', hideTip, { passive:true });
   })();
+  </script>
+</body>
+</html>
