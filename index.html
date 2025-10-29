@@ -30,12 +30,8 @@
     input[type="number"], input[type="text"]{width:320px;max-width:100%;background:#0f1117;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:10px 12px;border-radius:12px;outline:none}
     input[type="number"]:focus, input[type="text"]:focus{border-color:var(--accent)}
     .row{display:flex;gap:12px;flex-wrap:wrap}
-    .wrap-pills{gap:8px}
     .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,.06);border-radius:999px;font-size:13px;color:#d6dbeb}
     .pill strong{color:#fff}
-    .pill.accent{background:linear-gradient(180deg,var(--accent),#0042cc);color:#fff;box-shadow:0 6px 18px rgba(0,82,255,.28)}
-    .pill span{color:#cfd5e9}
-
     .out{display:flex;flex-direction:column;gap:10px;margin-top:8px}
     .out .line{display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:8px 0}
     .out .k{color:#c9cee3}
@@ -75,6 +71,7 @@
       <div class="badge" id="roiBadge">ROI: 0%</div>
     </header>
 
+    <!-- Profit Margin Calculator -->
     <section class="cards">
       <article class="card" id="pmCard">
         <h2>Profit Margin Calculator</h2>
@@ -86,34 +83,25 @@
         </div>
       </article>
 
+      <!-- Ad Performance & ROI -->
       <article class="card" id="roiCard">
         <h2>Ad Performance & ROI</h2>
         <div class="row">
           <div class="field"><label>Average (Gross) Profit Margin</label><input id="apm" type="number" step="0.001" min="0" max="1" value="0.600"></div>
-          <div class="field">
-            <label>Breakeven & CPA targets</label>
-            <div class="row wrap-pills">
-              <div class="pill accent"><span>Breakeven ROAS:</span> <strong id="breakeven">1.67</strong></div>
-              <div class="pill accent"><span>BE CPA:</span> <strong id="beCPA">$0</strong></div>
-              <div class="pill"><span>Target CPA 2x:</span> <strong id="targetCPA2x">$0</strong></div>
-              <div class="pill"><span>Target CPA 2.5x:</span> <strong id="targetCPA2_5x">$0</strong></div>
-            </div>
-          </div>
+          <div class="field"><label>Breakeven ROAS value</label><div class="badge" style="position:static;transform:none" id="breakeven">1.67</div></div>
+          <div class="field"><label>BE CPA</label><div class="badge" style="position:static;transform:none" id="beCPA">$0</div></div>
+          <div class="field"><label>Target CPA 2x ROAS</label><div class="pill"><strong id="targetCPA2x">$0</strong></div></div>
+          <div class="field"><label>Target CPA 2.5x ROAS</label><div class="pill"><strong id="targetCPA2_5x">$0</strong></div></div>
         </div>
-        <div class="field"><label>Service Fee</label><input id="serviceFee" type="number" step="50" min="0" value="2000"></div>
-        <div class="field"><label>Performance Fee (% of Profit After All Spend)</label><input id="perfPct" type="number" step="0.5" min="0" value="5"></div>
-        <div class="field"><label>Commission (calculated)</label><div class="pill"><strong id="commissionDisplay">$0</strong></div></div>
-        <hr style="border:0;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">
-        <div class="row">
-          <div class="field"><label>Recommended Ad Spend (per month)</label><input id="adSpend" type="number" step="500" min="0" value="20000"></div>
-          <div class="field"><label>ROAS Value Multiplier</label><input id="roas" type="number" step="0.1" min="0" value="6.00"></div>
-        </div>
+        <div class="field"><label>Monthly Ad Spend</label><input id="adSpend" type="number" step="500" min="0" value="20000"></div>
+        <div class="field"><label>Expected ROAS</label><input id="roas" type="number" step="0.1" min="0" value="6.00"></div>
         <div class="out">
           <div class="line"><div class="k">Revenue From Ad Spend (ROAS)</div><div class="v" id="revenue">$0 per month</div></div>
           <div class="line"><div class="k">Profit After Margin</div><div class="v" id="pam">$0 per month</div></div>
           <div class="line"><div class="k">Profit After Ad Spend</div><div class="v" id="paAd">$0 per month</div></div>
-          <div class="line"><div class="k">Profit After All Spend</div><div class="v" id="paAll">$0 per month</div></div>
-          <div class="line"><div class="k">True Profit</div><div class="v" id="trueProfit">$0 per month</div></div>
+          <div class="line"><div class="k">Net Profit</div><div class="v" id="trueProfit">$0 per month</div></div>
+          <div class="line"><div class="k">Actual ROAS</div><div class="v" id="actualROAS">0x</div></div>
+          <div class="line"><div class="k">Profit Margin After Ads</div><div class="v" id="profitMarginAfterAds">0%</div></div>
         </div>
         <div class="actions"><button class="ghost" id="shareBtn">Copiar link com estes valores</button></div>
       </article>
@@ -126,29 +114,21 @@
     const money0 = v => v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
     const clamp = (v,min,max)=>Math.min(max,Math.max(min,v));
     const toNum = el => parseFloat(el?.value || 0) || 0;
-    const apm=$('#apm'),serviceFee=$('#serviceFee'),perfPct=$('#perfPct'),commissionDisplay=$('#commissionDisplay'),adSpend=$('#adSpend'),roas=$('#roas'),breakeven=$('#breakeven'),revenue=$('#revenue'),pam=$('#pam'),paAd=$('#paAd'),paAll=$('#paAll'),trueProfit=$('#trueProfit'),roiBadge=$('#roiBadge'),price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),shareBtn=$('#shareBtn'),beCPA=$('#beCPA'),targetCPA2x=$('#targetCPA2x'),targetCPA2_5x=$('#targetCPA2_5x');
 
-    function calcPM(){const p=toNum(price),c=toNum(cost);const margin=p>0?clamp((p-c)/p,0,1):0;pmOut.textContent=(Math.round(margin*1000)/1000).toFixed(3);const mk=p>0?(p-c)/c:0;const mkPct=Math.round(mk*100);const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);markup.textContent=`${mkPct}% or ${mkXStr}x`;return margin;}
+    const apm=$('#apm'),adSpend=$('#adSpend'),roas=$('#roas'),
+    breakeven=$('#breakeven'),revenue=$('#revenue'),pam=$('#pam'),paAd=$('#paAd'),trueProfit=$('#trueProfit'),roiBadge=$('#roiBadge'),
+    price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),
+    beCPA=$('#beCPA'),targetCPA2x=$('#targetCPA2x'),targetCPA2_5x=$('#targetCPA2_5x'),
+    actualROAS=$('#actualROAS'),profitMarginAfterAds=$('#profitMarginAfterAds'),shareBtn=$('#shareBtn');
 
-    function calcBottom(){
-      const margin=toNum(apm),service=toNum(serviceFee),perf=toNum(perfPct)/100,spend=toNum(adSpend),r=toNum(roas),p=toNum(price),c=toNum(cost);
-      const breq=margin>0?(1/margin):0;
-      const rev=spend*r;
-      const pAfterMargin=rev*margin;
-      const pAfterAd=pAfterMargin-spend;
-      const pAfterAll=pAfterAd-service;
-      const perfFeeVal=Math.max(0,pAfterAll*perf);
-      const trueP=pAfterAll-perfFeeVal;
-      breakeven.textContent=breq.toFixed(2);
-      revenue.textContent=money0(rev)+' per month';
-      pam.textContent=money0(pAfterMargin)+' per month';
-      paAd.textContent=money0(pAfterAd)+' per month';
-      paAll.textContent=money0(pAfterAll)+' per month';
-      trueProfit.textContent=money0(trueP)+' per month';
-      commissionDisplay.textContent=money0(perfFeeVal);
-
-      const roiPct=service>0?(trueP/service)*100:0;
-      roiBadge.textContent=`ROI: ${Math.round(roiPct/10)*10}%`;
+    function calcPM(){
+      const p=toNum(price),c=toNum(cost);
+      const margin=p>0?clamp((p-c)/p,0,1):0;
+      pmOut.textContent=(Math.round(margin*1000)/1000).toFixed(3);
+      const mk=p>0?(p-c)/c:0;
+      const mkPct=Math.round(mk*100);
+      const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);
+      markup.textContent=`${mkPct}% or ${mkXStr}x`;
 
       // BE CPA and Targets (derived from price & cost)
       const beCPAVal = Math.max(0, p - c);
@@ -157,19 +137,68 @@
       beCPA.textContent = money0(beCPAVal);
       targetCPA2x.textContent = money0(target2x);
       targetCPA2_5x.textContent = money0(target2_5x);
-
-      return{trueP,perfFeeVal};
+      return margin;
     }
 
-    function syncMargin(){const m=calcPM();apm.value=(Math.round(m*1000)/1000).toFixed(3);calcBottom();saveToQuery();}
-    [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});[apm,serviceFee,perfPct,adSpend,roas].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+    function calcBottom(){
+      const margin=toNum(apm),spend=toNum(adSpend),r=toNum(roas);
+      const breq=margin>0?(1/margin):0;
+      const rev=spend*r;
+      const pAfterMargin=rev*margin;
+      const pAfterAd=pAfterMargin-spend;
+      const trueP=pAfterAd;
 
-    function saveToQuery(){const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,fee:serviceFee.value,perf:perfPct.value,spend:adSpend.value,roas:roas.value});const url=`${location.pathname}?${params.toString()}`;history.replaceState(null,'',url);}
-    function loadFromQuery(){const q=new URLSearchParams(location.search);const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};set(price,'price');set(cost,'cost');set(apm,'apm');set(serviceFee,'fee');set(perfPct,'perf');set(adSpend,'spend');set(roas,'roas');}
+      breakeven.textContent=breq.toFixed(2);
+      revenue.textContent=money0(rev)+' per month';
+      pam.textContent=money0(pAfterMargin)+' per month';
+      paAd.textContent=money0(pAfterAd)+' per month';
+      trueProfit.textContent=money0(trueP)+' per month';
 
-    shareBtn.addEventListener('click',async()=>{saveToQuery();const shareUrl=location.href;try{await navigator.clipboard.writeText(shareUrl);shareBtn.textContent='Link copiado!';setTimeout(()=>shareBtn.textContent='Copiar link com estes valores',1500);}catch(e){alert(shareUrl);}});
+      const roiPct=spend>0?(trueP/spend)*100:0;
+      const actualROASVal=spend>0?(rev/spend):0;
+      const profitMarginAdPct=rev>0?(trueP/rev)*100:0;
 
-    loadFromQuery();syncMargin();
+      roiBadge.textContent=`ROI: ${Math.round(roiPct)}%`;
+      actualROAS.textContent=`${actualROASVal.toFixed(2)}x`;
+      profitMarginAfterAds.textContent=`${profitMarginAdPct.toFixed(1)}%`;
+
+      return{trueP,roiPct};
+    }
+
+    function syncMargin(){
+      const m=calcPM();
+      apm.value=(Math.round(m*1000)/1000).toFixed(3);
+      calcBottom();
+      saveToQuery();
+    }
+
+    [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});
+    [apm,adSpend,roas].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+
+    function saveToQuery(){
+      const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,spend:adSpend.value,roas:roas.value});
+      const url=`${location.pathname}?${params.toString()}`;
+      history.replaceState(null,'',url);
+    }
+
+    function loadFromQuery(){
+      const q=new URLSearchParams(location.search);
+      const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};
+      set(price,'price');set(cost,'cost');set(apm,'apm');set(adSpend,'spend');set(roas,'roas');
+    }
+
+    shareBtn.addEventListener('click',async()=>{
+      saveToQuery();
+      const shareUrl=location.href;
+      try{
+        await navigator.clipboard.writeText(shareUrl);
+        shareBtn.textContent='Link copiado!';
+        setTimeout(()=>shareBtn.textContent='Copiar link com estes valores',1500);
+      }catch(e){alert(shareUrl);}
+    });
+
+    loadFromQuery();
+    syncMargin();
   })();
   </script>
 </body>
