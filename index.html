@@ -95,12 +95,12 @@
         </div>
         <div class="field"><label>Monthly Ad Spend</label><input id="adSpend" type="number" step="500" min="0" value="20000"></div>
         <div class="field"><label>Expected ROAS</label><input id="roas" type="number" step="0.1" min="0" value="6.00"></div>
+        <div class="field"><label>Monthly Team & Staff Costs</label><input id="teamFee" type="number" step="50" min="0" value="2000"></div>
         <div class="out">
-          <div class="line"><div class="k">Revenue From Ad Spend (ROAS)</div><div class="v" id="revenue">$0 per month</div></div>
-          <div class="line"><div class="k">Profit After Margin</div><div class="v" id="pam">$0 per month</div></div>
-          <div class="line"><div class="k">Profit After Ad Spend</div><div class="v" id="paAd">$0 per month</div></div>
-          <div class="line"><div class="k">Net Profit</div><div class="v" id="trueProfit">$0 per month</div></div>
-          <div class="line"><div class="k">Actual ROAS</div><div class="v" id="actualROAS">0x</div></div>
+          <div class="line"><div class="k">Revenue From Ad Spend (ROAS)</div><div class="v" id="revenue">$0/month</div></div>
+          <div class="line"><div class="k">Profit After Margin</div><div class="v" id="pam">$0/month</div></div>
+          <div class="line"><div class="k">Profit After Ad Spend</div><div class="v" id="paAd">$0/month</div></div>
+          <div class="line"><div class="k">Net Profit</div><div class="v" id="trueProfit">$0/month</div></div>
           <div class="line"><div class="k">Profit Margin After Ads</div><div class="v" id="profitMarginAfterAds">0%</div></div>
         </div>
         <div class="actions"><button class="ghost" id="shareBtn">Copiar link com estes valores</button></div>
@@ -111,15 +111,18 @@
   <script>
   (function(){
     const $ = sel => document.querySelector(sel);
-    const money0 = v => v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
+    const money0 = v => {
+      if(v>=1000) return `$${(v/1000).toFixed(1)}k`;
+      return v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
+    };
     const clamp = (v,min,max)=>Math.min(max,Math.max(min,v));
     const toNum = el => parseFloat(el?.value || 0) || 0;
 
-    const apm=$('#apm'),adSpend=$('#adSpend'),roas=$('#roas'),
+    const apm=$('#apm'),adSpend=$('#adSpend'),roas=$('#roas'),teamFee=$('#teamFee'),
     breakeven=$('#breakeven'),revenue=$('#revenue'),pam=$('#pam'),paAd=$('#paAd'),trueProfit=$('#trueProfit'),roiBadge=$('#roiBadge'),
     price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),
     beCPA=$('#beCPA'),targetCPA2x=$('#targetCPA2x'),targetCPA2_5x=$('#targetCPA2_5x'),
-    actualROAS=$('#actualROAS'),profitMarginAfterAds=$('#profitMarginAfterAds'),shareBtn=$('#shareBtn');
+    profitMarginAfterAds=$('#profitMarginAfterAds'),shareBtn=$('#shareBtn');
 
     function calcPM(){
       const p=toNum(price),c=toNum(cost);
@@ -130,36 +133,33 @@
       const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);
       markup.textContent=`${mkPct}% or ${mkXStr}x`;
 
-      // BE CPA and Targets (derived from price & cost)
-      const beCPAVal = Math.max(0, p - c);
-      const target2x = beCPAVal / 2;
-      const target2_5x = beCPAVal / 2.5;
-      beCPA.textContent = money0(beCPAVal);
-      targetCPA2x.textContent = money0(target2x);
-      targetCPA2_5x.textContent = money0(target2_5x);
+      const beCPAVal=Math.max(0,p-c);
+      const target2x=beCPAVal/2;
+      const target2_5x=beCPAVal/2.5;
+      beCPA.textContent=money0(beCPAVal);
+      targetCPA2x.textContent=money0(target2x);
+      targetCPA2_5x.textContent=money0(target2_5x);
       return margin;
     }
 
     function calcBottom(){
-      const margin=toNum(apm),spend=toNum(adSpend),r=toNum(roas);
+      const margin=toNum(apm),spend=toNum(adSpend),r=toNum(roas),team=toNum(teamFee);
       const breq=margin>0?(1/margin):0;
       const rev=spend*r;
       const pAfterMargin=rev*margin;
       const pAfterAd=pAfterMargin-spend;
-      const trueP=pAfterAd;
+      const trueP=pAfterAd-team;
 
       breakeven.textContent=breq.toFixed(2);
-      revenue.textContent=money0(rev)+' per month';
-      pam.textContent=money0(pAfterMargin)+' per month';
-      paAd.textContent=money0(pAfterAd)+' per month';
-      trueProfit.textContent=money0(trueP)+' per month';
+      revenue.textContent=money0(rev)+'/month';
+      pam.textContent=money0(pAfterMargin)+'/month';
+      paAd.textContent=money0(pAfterAd)+'/month';
+      trueProfit.textContent=money0(trueP)+'/month';
 
       const roiPct=spend>0?(trueP/spend)*100:0;
-      const actualROASVal=spend>0?(rev/spend):0;
       const profitMarginAdPct=rev>0?(trueP/rev)*100:0;
 
       roiBadge.textContent=`ROI: ${Math.round(roiPct)}%`;
-      actualROAS.textContent=`${actualROASVal.toFixed(2)}x`;
       profitMarginAfterAds.textContent=`${profitMarginAdPct.toFixed(1)}%`;
 
       return{trueP,roiPct};
@@ -173,10 +173,10 @@
     }
 
     [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});
-    [apm,adSpend,roas].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+    [apm,adSpend,roas,teamFee].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
 
     function saveToQuery(){
-      const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,spend:adSpend.value,roas:roas.value});
+      const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,spend:adSpend.value,roas:roas.value,team:teamFee.value});
       const url=`${location.pathname}?${params.toString()}`;
       history.replaceState(null,'',url);
     }
@@ -184,7 +184,7 @@
     function loadFromQuery(){
       const q=new URLSearchParams(location.search);
       const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};
-      set(price,'price');set(cost,'cost');set(apm,'apm');set(adSpend,'spend');set(roas,'roas');
+      set(price,'price');set(cost,'cost');set(apm,'apm');set(adSpend,'spend');set(roas,'roas');set(teamFee,'team');
     }
 
     shareBtn.addEventListener('click',async()=>{
