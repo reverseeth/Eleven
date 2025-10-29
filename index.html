@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>E-Commerce Results & Profit Margin Calculator</title>
+  <style>
+    :root{
+      --bg:#0b0c10;--card:#15171e;--muted:#8b90a2;--text:#e9ecf4;--accent:#0052ff;--accent-2:#5aa0ff;
+      --ok:#37d67a;--warn:#ffce3a;--bad:#ff6b6b;--radius:20px;--shadow:0 8px 28px rgba(0,0,0,.35);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{margin:0;font:16px/1.5 "Helvetica Neue", Helvetica, Arial, sans-serif;color:var(--text);
+      background:var(--bg)}
+    .wrap{max-width:1440px;margin:40px auto;padding:0 28px 72px}
+
+    header{display:flex;align-items:center;justify-content:center;position:relative;margin-bottom:24px;flex-wrap:wrap;}
+    header .left-logo{position:absolute;left:0;top:50%;transform:translateY(-50%);display:flex;align-items:center;gap:10px}
+    header .center-title{text-align:center;z-index:2;}
+    h1{font-size:clamp(26px,3vw,40px);margin:0 0 6px;letter-spacing:.2px}
+    .sub{color:var(--muted);font-size:14px}
+
+    .badge{display:inline-flex;align-items:center;justify-content:center;padding:10px 16px;background:linear-gradient(180deg,var(--accent),#0042cc);color:#fff;border-radius:14px;font-weight:700;box-shadow:0 10px 24px rgba(0,82,255,.35);position:absolute;right:0;top:50%;transform:translateY(-50%)}
+
+    .cards{display:grid;grid-template-columns:1fr;gap:26px}
+    .card{background:var(--card);padding:22px;border-radius:var(--radius);box-shadow:var(--shadow);border:1px solid rgba(255,255,255,.06)}
+    .card h2{margin:4px 0 16px;font-size:20px}
+    .field{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center;margin:12px 0}
+    input[type="number"], input[type="text"]{width:320px;max-width:100%;background:#0f1117;border:1px solid rgba(255,255,255,.08);color:var(--text);padding:10px 12px;border-radius:12px;outline:none}
+    input[type="number"]:focus, input[type="text"]:focus{border-color:var(--accent)}
+    .row{display:flex;gap:12px;flex-wrap:wrap}
+    .pill{display:inline-flex;align-items:center;gap:8px;padding:6px 12px;background:rgba(255,255,255,.06);border-radius:999px;font-size:13px;color:#d6dbeb}
+    .pill strong{color:#fff}
+    .out{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+    .out .line{display:flex;justify-content:space-between;border-bottom:1px dashed rgba(255,255,255,.08);padding:8px 0}
+    .out .k{color:#c9cee3}
+    .out .v{font-variant-numeric:tabular-nums}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}
+    button{border:0;background:var(--accent);color:#fff;padding:10px 14px;border-radius:12px;font-weight:600;cursor:pointer;box-shadow:0 8px 18px rgba(0,82,255,.35)}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,.15);color:#d6dbeb}
+
+    @media (max-width: 640px){
+      .wrap{padding:0 16px 84px}
+      h1{font-size:28px}
+      .card{padding:18px}
+      input[type="number"], input[type="text"]{width:100%}
+      .field{grid-template-columns:1fr;gap:6px}
+      header{flex-direction:column;gap:10px;position:static}
+      header .left-logo{position:static;transform:none;margin-bottom:10px}
+      .badge{position:static;transform:none}
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="left-logo">
+        <svg class="brand-logo" viewBox="0 0 909.52 909.52" width="36" height="36" aria-label="logo" style="fill:#fff;display:block">
+          <polygon points="0 0 0 184.85 178.98 363.82 178.98 181.91 909.52 181.91 909.52 0 0 0"/>
+          <polygon points="178.97 366.77 357.99 545.71 178.97 545.71 178.97 727.62 .03 548.67 .03 363.81 178.97 363.81 178.97 366.77"/>
+          <rect x="357.99" y="363.81" width="551.5" height="181.9"/>
+          <polygon points="178.97 730.58 357.99 909.52 .03 909.52 .03 727.62 178.97 727.62 178.97 730.58"/>
+          <rect x="357.99" y="727.62" width="551.5" height="181.9"/>
+        </svg>
+      </div>
+      <div class="center-title">
+        <h1>E-Commerce Results Calculator</h1>
+        <div class="sub">Preencha primeiro a margem (calculadora abaixo). Os resultados são atualizados em tempo real.</div>
+      </div>
+      <div class="badge" id="roiBadge">ROI: 0%</div>
+    </header>
+
+    <!-- Profit Margin Calculator -->
+    <section class="cards">
+      <article class="card" id="pmCard">
+        <h2>Profit Margin Calculator</h2>
+        <div class="field"><label>Price of Product + Shipping</label><input id="price" type="number" step="0.01" min="0" value="89.99"></div>
+        <div class="field"><label>Cost of Product + Shipping</label><input id="cost" type="number" step="0.01" min="0" value="28.00"></div>
+        <div class="row">
+          <div class="pill">Your Profit Margin: <strong id="pmOut">0.688</strong></div>
+          <div class="pill">Markup: <strong id="markup">221% or 2.21x</strong></div>
+        </div>
+      </article>
+
+      <!-- Ad Performance & ROI -->
+      <article class="card" id="roiCard">
+        <h2>Ad Performance & ROI</h2>
+        <div class="row">
+          <div class="field"><label>Average (Gross) Profit Margin</label><input id="apm" type="number" step="0.001" min="0" max="1" value="0.600"></div>
+          <div class="field"><label>Breakeven ROAS value</label><div class="pill"><strong id="breakeven">1.67</strong></div></div>
+        </div>
+        <div class="field"><label>Service Fee</label><input id="serviceFee" type="number" step="50" min="0" value="2000"></div>
+        <div class="field"><label>Performance Fee (% of Profit After All Spend)</label><input id="perfPct" type="number" step="0.5" min="0" value="5"></div>
+        <div class="field"><label>Commission (calculated)</label><div class="pill"><strong id="commissionDisplay">$0</strong></div></div>
+        <hr style="border:0;border-top:1px solid rgba(255,255,255,.08);margin:16px 0">
+        <div class="row">
+          <div class="field"><label>Recommended Ad Spend (per month)</label><input id="adSpend" type="number" step="500" min="0" value="20000"></div>
+          <div class="field"><label>ROAS Value Multiplier</label><input id="roas" type="number" step="0.1" min="0" value="6.00"></div>
+        </div>
+        <div class="out">
+          <div class="line"><div class="k">Revenue From Ad Spend (ROAS)</div><div class="v" id="revenue">$0 per month</div></div>
+          <div class="line"><div class="k">Profit After Margin</div><div class="v" id="pam">$0 per month</div></div>
+          <div class="line"><div class="k">Profit After Ad Spend</div><div class="v" id="paAd">$0 per month</div></div>
+          <div class="line"><div class="k">Profit After All Spend</div><div class="v" id="paAll">$0 per month</div></div>
+          <div class="line"><div class="k">True Profit</div><div class="v" id="trueProfit">$0 per month</div></div>
+        </div>
+        <div class="actions"><button class="ghost" id="shareBtn">Copiar link com estes valores</button></div>
+      </article>
+    </section>
+  </div>
+
+  <script>
+  (function(){
+    const $ = sel => document.querySelector(sel);
+    const money0 = v => v.toLocaleString('en-US', { style:'currency', currency:'USD', maximumFractionDigits:0 });
+    const clamp = (v,min,max)=>Math.min(max,Math.max(min,v));
+    const toNum = el => parseFloat(el?.value || 0) || 0;
+    const apm=$('#apm'),serviceFee=$('#serviceFee'),perfPct=$('#perfPct'),commissionDisplay=$('#commissionDisplay'),adSpend=$('#adSpend'),roas=$('#roas'),breakeven=$('#breakeven'),revenue=$('#revenue'),pam=$('#pam'),paAd=$('#paAd'),paAll=$('#paAll'),trueProfit=$('#trueProfit'),roiBadge=$('#roiBadge'),price=$('#price'),cost=$('#cost'),pmOut=$('#pmOut'),markup=$('#markup'),shareBtn=$('#shareBtn');
+    function calcPM(){const p=toNum(price),c=toNum(cost);const margin=p>0?clamp((p-c)/p,0,1):0;pmOut.textContent=(Math.round(margin*1000)/1000).toFixed(3);const mk=p>0?(p-c)/c:0;const mkPct=Math.round(mk*100);const mkXStr=(Math.round(mk*100)/100).toFixed(mk<10?2:1);markup.textContent=`${mkPct}% or ${mkXStr}x`;return margin;}
+    function calcBottom(){const margin=toNum(apm),service=toNum(serviceFee),perf=toNum(perfPct)/100,spend=toNum(adSpend),r=toNum(roas);const breq=margin>0?(1/margin):0;const rev=spend*r;const pAfterMargin=rev*margin;const pAfterAd=pAfterMargin-spend;const pAfterAll=pAfterAd-service;const perfFeeVal=Math.max(0,pAfterAll*perf);const trueP=pAfterAll-perfFeeVal;breakeven.textContent=breq.toFixed(2);revenue.textContent=money0(rev)+' per month';pam.textContent=money0(pAfterMargin)+' per month';paAd.textContent=money0(pAfterAd)+' per month';paAll.textContent=money0(pAfterAll)+' per month';trueProfit.textContent=money0(trueP)+' per month';commissionDisplay.textContent=money0(perfFeeVal);const roiPct=service>0?(trueP/service)*100:0;roiBadge.textContent=`ROI: ${Math.round(roiPct/10)*10}%`;return{trueP,perfFeeVal};}
+    function syncMargin(){const m=calcPM();apm.value=(Math.round(m*1000)/1000).toFixed(3);calcBottom();saveToQuery();}
+    [price,cost].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,syncMargin));});[apm,serviceFee,perfPct,adSpend,roas].forEach(el=>{['input','change'].forEach(ev=>el.addEventListener(ev,()=>{calcBottom();saveToQuery();}));});
+    function saveToQuery(){const params=new URLSearchParams({price:price.value,cost:cost.value,apm:apm.value,fee:serviceFee.value,perf:perfPct.value,spend:adSpend.value,roas:roas.value});const url=`${location.pathname}?${params.toString()}`;history.replaceState(null,'',url);}
+    function loadFromQuery(){const q=new URLSearchParams(location.search);const set=(el,key)=>{if(q.has(key))el.value=q.get(key);};set(price,'price');set(cost,'cost');set(apm,'apm');set(serviceFee,'fee');set(perfPct,'perf');set(adSpend,'spend');set(roas,'roas');}
+    shareBtn.addEventListener('click',async()=>{saveToQuery();const shareUrl=location.href;try{await navigator.clipboard.writeText(shareUrl);shareBtn.textContent='Link copiado!';setTimeout(()=>shareBtn.textContent='Copiar link com estes valores',1500);}catch(e){alert(shareUrl);}});
+    loadFromQuery();syncMargin();
+  })();
+  </script>
+</body>
+</html>
